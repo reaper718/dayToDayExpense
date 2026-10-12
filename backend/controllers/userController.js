@@ -1,8 +1,9 @@
 const Users = require('../models/Users');
+const bcrypt = require('bcrypt');
 
 const addUser = async (req,res) => {
     try {
-        const {email} = req.body;
+        const {name, email, password} = req.body;
 
         const user = await Users.findOne({
             where: {
@@ -15,8 +16,13 @@ const addUser = async (req,res) => {
             return;
         }
 
+        const hashedPasswd = await bcrypt.hash(password,10);
+        console.log(hashedPasswd)
+
         const newUser = await Users.create({
-            ...req.body
+            name: name,
+            email: email,
+            password: hashedPasswd
         })
 
         res.status(201).send("Users Created successfully!!!");
@@ -40,8 +46,12 @@ const getUser = async (req,res) => {
         return res.status(404).send("user not found");
        }
 
-       if(user.password != password) {
-        return res.status(403).send("Incorrect Password");
+       const isPasswordValid = await bcrypt.compare(
+        password,user.password
+       )
+
+       if(isPasswordValid) {
+        return res.status(401).send("Incorrect Password");
        }
 
        return res.status(200).send("user logged in successfully");

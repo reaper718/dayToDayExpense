@@ -3,6 +3,7 @@ const db = require('./utils/db-connection');
 const cors = require('cors');
 
 const userRouter = require('./routers/userRouter');
+const expenseRouter = require('./routers/expenseRouter');
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.use(express.json())
 app.use(cors());
 
 app.use('/users',userRouter);
+app.use('/expense',expenseRouter);
 
 
 db.sync().then(() => {

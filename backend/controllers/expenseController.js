@@ -2,23 +2,31 @@ const Expense = require('../models/Expenses');
 
 const addExpense = async (req,res) => {
     try {
+        console.log(req);
         const expense = await Expense.create({
-            ...req.body
+            ...req.body,
+            UserId: req.user.id
         })
 
         
         res.status(200).json(expense);
     } catch (error) {
+        console.log(error);
         res.status(500).send(error);
     }
 }
 
 const getExpenses = async (req,res) =>{
     try {
-        const expenses = await Expense.findAll();
+        const expenses = await Expense.findAll({
+            where: {
+                UserId: req.user.id
+            }
+        });
 
         res.status(200).json(expenses);
     } catch (error) {
+        console.log(error);
         res.status(500).send(error);
     }
 }
@@ -29,7 +37,8 @@ const deleteExpense = async (req,res) => {
 
         const expense = await Expense.destroy({
             where: {
-                id: id
+                id: id,
+                UserId: req.user.id
             }
         })
 
@@ -51,7 +60,12 @@ const editExpense = async (req,res) => {
         const {id} = req.params;
         const {expense, description , category} = req.body;
 
-        const expenses = await Expense.findByPk(id)
+        const expenses = await Expense.findOne({
+            where: {
+                id: id,
+                UserId: req.user.id
+            }
+        })
 
         if(!expenses) {
             res.status(404).send("Expense not found");

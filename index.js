@@ -17,3 +17,20 @@ function handleFormSubmit(event) {
         })
         .catch(err => console.log(err));
 }
+
+function handleLogin(event) {
+    event.preventDefault();
+
+    const loginDetails = {
+        email: event.target.email.value,
+        password: event.target.password.value
+    }
+
+    console.log(loginDetails)
+
+    axios.post(`${API_URL}/users/login`,loginDetails)
+        .then((res) => {
+            alert("user logged in")
+        })
+        .catch(err => console.log(err));
+}

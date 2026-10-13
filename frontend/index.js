@@ -318,7 +318,7 @@ function showLeaderboard() {
                 rankCell.textContent = index + 1;
 
                 const nameCell = document.createElement("td");
-                nameCell.textContent = item.User.name;
+                nameCell.textContent = item.name;
 
                 const expenseCell = document.createElement("td");
                 expenseCell.textContent =

@@ -63,7 +63,8 @@ const getUser = async (req,res) => {
 
        return res.status(200).json({
             message: "User logged in successfully",
-            token: token
+            token: token,
+            isPremium: user.isPremium
         });
     } catch (error) {
         console.log(error);

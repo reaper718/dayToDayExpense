@@ -19,6 +19,10 @@ const Users = sequelize.define('Users', {
     password: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    isPremium: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
     }
 })
 

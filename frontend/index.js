@@ -1,5 +1,9 @@
 const API_URL = "http://localhost:3000"
 
+let allExpenses = [];
+let currentPage = 1;
+const expensesPerPage = 10;
+
 function setAuthToken() {
     const token = sessionStorage.getItem("token");
 
@@ -58,75 +62,71 @@ function handleLogin(event) {
 }
 
 
-const forgotPasswordLink = document.getElementById("forgotPasswordLink");
-const forgotPasswordForm = document.getElementById("forgotPasswordForm");
-const backToLogin = document.getElementById("backToLogin");
-const forgotMessage = document.getElementById("forgotMessage");
+// const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+// const forgotPasswordForm = document.getElementById("forgotPasswordForm");
+// const backToLogin = document.getElementById("backToLogin");
+// const forgotMessage = document.getElementById("forgotMessage");
 
-forgotPasswordLink.addEventListener("click", (event) => {
-    event.preventDefault();
+// forgotPasswordLink.addEventListener("click", (event) => {
+//     event.preventDefault();
 
-    forgotPasswordForm.classList.remove("d-none");
-    forgotMessage.textContent = "";
-    document.getElementById("forgotEmail").value = "";
-});
+//     forgotPasswordForm.classList.remove("d-none");
+//     forgotMessage.textContent = "";
+//     document.getElementById("forgotEmail").value = "";
+// });
 
-backToLogin.addEventListener("click", () => {
-    forgotPasswordForm.classList.add("d-none");
-    forgotMessage.textContent = "";
-});
+// backToLogin.addEventListener("click", () => {
+//     forgotPasswordForm.classList.add("d-none");
+//     forgotMessage.textContent = "";
+// });
 
-forgotPasswordForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
+// forgotPasswordForm.addEventListener("submit", async (event) => {
+//     event.preventDefault();
 
-    const email = document.getElementById("forgotEmail").value.trim();
+//     const email = document.getElementById("forgotEmail").value.trim();
 
-    try {
-        const response = await axios.post(
-            `${API_URL}/password/forgotpassword`,
-            { email }
-        );
+//     try {
+//         const response = await axios.post(
+//             `${API_URL}/password/forgotpassword`,
+//             { email }
+//         );
 
-        forgotMessage.textContent =
-            response.data.message || "Request submitted successfully.";
+//         forgotMessage.textContent =
+//             response.data.message || "Request submitted successfully.";
 
-        forgotMessage.className = "small text-center mt-2 text-success";
-    } catch (error) {
-        console.error(error);
+//         forgotMessage.className = "small text-center mt-2 text-success";
+//     } catch (error) {
+//         console.error(error);
 
-        forgotMessage.textContent =
-            error.response?.data?.message ||
-            "Unable to process your request. Please try again.";
+//         forgotMessage.textContent =
+//             error.response?.data?.message ||
+//             "Unable to process your request. Please try again.";
 
-        forgotMessage.className = "small text-center mt-2 text-danger";
-    }
-});
-
-
+//         forgotMessage.className = "small text-center mt-2 text-danger";
+//     }
+// });
 
 
 document.addEventListener("DOMContentLoaded", initialize);
 
 function initialize() {
-    // Set the JWT token before making API requests
-    setAuthToken();
-
     const token = sessionStorage.getItem("token");
 
-    // Redirect if token is missing
-    // if (!token) {
-    //     window.location.href = "login.html";
-    //     return;
-    // }
+    if (!token) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
     axios.get(`${API_URL}/expense/getExpense`)
         .then((res) => {
-            for (let i = 0; i < res.data.length; i++) {
-                display(res.data[i]);
-            }
+            allExpenses = res.data;
+            currentPage = 1;
+            renderExpenses();
         })
         .catch((err) => {
-            console.log(
+            console.error(
                 "Fetch error:",
                 err.response?.data || err.message
             );
@@ -136,6 +136,65 @@ function initialize() {
                 window.location.href = "login.html";
             }
         });
+
+    document.getElementById("prevPage").addEventListener("click", () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderExpenses();
+        }
+    });
+
+    document.getElementById("nextPage").addEventListener("click", () => {
+        const totalPages = Math.max(
+            1,
+            Math.ceil(allExpenses.length / expensesPerPage)
+        );
+
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderExpenses();
+        }
+    });
+}
+
+function renderExpenses() {
+    const expenseList = document.getElementById("expenseList");
+    const pageInfo = document.getElementById("pageInfo");
+    const prevPage = document.getElementById("prevPage");
+    const nextPage = document.getElementById("nextPage");
+
+    const totalPages = Math.max(
+        1,
+        Math.ceil(allExpenses.length / expensesPerPage)
+    );
+
+    // Keep currentPage within valid limits
+    currentPage = Math.min(currentPage, totalPages);
+
+    const startIndex = (currentPage - 1) * expensesPerPage;
+    const endIndex = startIndex + expensesPerPage;
+
+    const currentExpenses = allExpenses.slice(startIndex, endIndex);
+
+    expenseList.innerHTML = "";
+
+    if (allExpenses.length === 0) {
+        expenseList.innerHTML = `
+            <li class="list-group-item text-muted">
+                No expenses found.
+            </li>
+        `;
+    } else {
+        currentExpenses.forEach((expense) => {
+            display(expense);
+        });
+    }
+
+    pageInfo.textContent =
+        `Page ${currentPage} of ${totalPages} | Total expenses: ${allExpenses.length}`;
+
+    prevPage.disabled = currentPage === 1;
+    nextPage.disabled = currentPage === totalPages;
 }
 
 
@@ -173,8 +232,9 @@ function addExpense(event) {
     } else {
               axios.post(`${API_URL}/expense/addExpense`, expenseDetails)
                     .then((res) => {
-                        display(res.data);
-                        // Clear form
+                        allExpenses.unshift(res.data);
+                        currentPage = 1;
+                        renderExpenses();
                         event.target.reset();
                     })
                     .catch((err) => {

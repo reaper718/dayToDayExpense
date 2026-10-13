@@ -345,3 +345,50 @@ function showLeaderboard() {
             alert("Unable to load leaderboard.");
         });
 }
+
+// Debouncing for AI response
+const descriptionInput = document.getElementById("description");
+const aiResponse = document.getElementById("ai-response");
+
+let debounceTimer;
+let controller;
+
+descriptionInput.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+
+    if (controller) {
+        controller.abort();
+    }
+
+    const description = descriptionInput.value.trim();
+
+    if (!description) {
+        aiResponse.textContent = "";
+        aiResponse.style.display = "none";
+        return;
+    }
+
+    aiResponse.textContent = "Generating suggestion...";
+    aiResponse.style.display = "block";
+
+    debounceTimer = setTimeout(async () => {
+        controller = new AbortController();
+
+        try {
+            const response = await axios.post(
+                `${API_URL}/ai`,
+                { description },
+                { signal: controller.signal }
+            );
+
+            aiResponse.textContent =response.data.category;
+
+        } catch (error) {
+            if (error.code !== "ERR_CANCELED") {
+                console.error("AI request failed:", error);
+                aiResponse.textContent =
+                    "Unable to generate suggestion.";
+            }
+        }
+    }, 700);
+});

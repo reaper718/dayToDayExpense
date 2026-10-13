@@ -6,8 +6,8 @@ const Orders = require("../models/Orders");
 
 const cashfree = new Cashfree(
   CFEnvironment.SANDBOX,
-  "CLIENT_ID",
-  "CLIENT_SECRET_KEY"
+  "TEST10473636d9e06a7a10d8f2ddf74163637401",
+  "cfsk_ma_test_3521dd7629a184fd837ae0778982ca6f_26ce7928"
 );
 
 const createOrder = async (req, res) => {

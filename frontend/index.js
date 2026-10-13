@@ -231,9 +231,10 @@ function addExpense(event) {
 
     const expense = event.target.expense.value;
     const description = event.target.description.value;
+    const note = event.target.note.value;
     const category = event.target.category.value;
 
-    const expenseDetails = { expense, description, category };
+    const expenseDetails = { expense, description, note, category };
 
     const editId = sessionStorage.getItem("editId");
 
@@ -246,6 +247,7 @@ function addExpense(event) {
                 expenseInfo.innerHTML = `
                     <strong>${res.data.expense}</strong>
                     <span class="ms-3">${res.data.description}</span>
+                    <span class="ms-3">${res.data.note}</span>
                     <span class="badge bg-secondary ms-3">${res.data.category}</span>
                 `;
 
@@ -286,6 +288,7 @@ function display(data) {
     expenseInfo.innerHTML = `
         <strong>₹${data.expense}</strong>
         <span class="ms-3">${data.description}</span>
+        <span class="ms-3">${data.note}</span>
         <span class="badge bg-secondary ms-3">${data.category}</span>
     `;
 

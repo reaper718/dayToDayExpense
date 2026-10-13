@@ -6,12 +6,13 @@ const addExpense = async (req, res) => {
     const transaction = await Expense.sequelize.transaction();
 
     try {
-        const { expense, description, category } = req.body;
+        const { expense, description, note, category } = req.body;
         const userId = req.user.id;
 
         const newExpense = await Expense.create({
             expense,
             description,
+            note,
             category,
             UserId: userId
         }, { transaction });

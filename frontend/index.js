@@ -2,7 +2,12 @@ const API_URL = "http://localhost:3000"
 
 let allExpenses = [];
 let currentPage = 1;
-const expensesPerPage = 10;
+
+const PAGE_SIZE_KEY = "expensesPerPage";
+
+let expensesPerPage = Number(
+    localStorage.getItem(PAGE_SIZE_KEY)
+) || 10;
 
 function setAuthToken() {
     const token = sessionStorage.getItem("token");
@@ -109,6 +114,7 @@ function handleLogin(event) {
 
 document.addEventListener("DOMContentLoaded", initialize);
 
+
 function initialize() {
     const token = sessionStorage.getItem("token");
 
@@ -119,23 +125,22 @@ function initialize() {
 
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-    axios.get(`${API_URL}/expense/getExpense`)
-        .then((res) => {
-            allExpenses = res.data;
+    const pageSizeSelect = document.getElementById("pageSize");
+
+    if (pageSizeSelect) {
+        // Restore the user's saved preference
+        pageSizeSelect.value = String(expensesPerPage);
+
+        // Save preference whenever the user changes it
+        pageSizeSelect.addEventListener("change", function () {
+            expensesPerPage = Number(this.value);
+            localStorage.setItem(PAGE_SIZE_KEY, expensesPerPage);
+
+            // Reset to the first page with the new page size
             currentPage = 1;
             renderExpenses();
-        })
-        .catch((err) => {
-            console.error(
-                "Fetch error:",
-                err.response?.data || err.message
-            );
-
-            if (err.response?.status === 401) {
-                sessionStorage.removeItem("token");
-                window.location.href = "login.html";
-            }
         });
+    }
 
     document.getElementById("prevPage").addEventListener("click", () => {
         if (currentPage > 1) {
@@ -155,7 +160,27 @@ function initialize() {
             renderExpenses();
         }
     });
+
+    axios.get(`${API_URL}/expense/getExpense`)
+        .then((res) => {
+            allExpenses = res.data;
+            currentPage = 1;
+            renderExpenses();
+        })
+        .catch((err) => {
+            console.error(
+                "Fetch error:",
+                err.response?.data || err.message
+            );
+
+            if (err.response?.status === 401) {
+                sessionStorage.removeItem("token");
+                window.location.href = "login.html";
+            }
+        });
 }
+
+
 
 function renderExpenses() {
     const expenseList = document.getElementById("expenseList");
@@ -168,13 +193,14 @@ function renderExpenses() {
         Math.ceil(allExpenses.length / expensesPerPage)
     );
 
-    // Keep currentPage within valid limits
+    // If deletion reduces the number of pages, move to the last valid page.
     currentPage = Math.min(currentPage, totalPages);
 
     const startIndex = (currentPage - 1) * expensesPerPage;
-    const endIndex = startIndex + expensesPerPage;
-
-    const currentExpenses = allExpenses.slice(startIndex, endIndex);
+    const currentExpenses = allExpenses.slice(
+        startIndex,
+        startIndex + expensesPerPage
+    );
 
     expenseList.innerHTML = "";
 
@@ -196,6 +222,7 @@ function renderExpenses() {
     prevPage.disabled = currentPage === 1;
     nextPage.disabled = currentPage === totalPages;
 }
+
 
 
 function addExpense(event) {
@@ -300,15 +327,26 @@ function addData(expenseList, expenseDetails) {
 
 
 // use this function to delete the user details from local store and DOM (screen)
+
 function deleteData(id, li) {
     axios.delete(`${API_URL}/expense/deleteExpense/${id}`)
-        .then((res) => {
-            li.remove();
+        .then(() => {
+            // Remove the deleted expense from the array
+            allExpenses = allExpenses.filter(
+                expense => String(expense.id) !== String(id)
+            );
+
+            // Re-render pagination and remaining expenses
+            renderExpenses();
         })
         .catch((err) => {
-            console.log("Delete error:", err);
-        })
+            console.log(
+                "Delete error:",
+                err.response?.data || err.message
+            );
+        });
 }
+
 
 // use this function to update user details from local storage
 function editData(data) {

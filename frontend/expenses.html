@@ -73,6 +73,22 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <h4 class="card-title mb-4">Your Expenses</h4>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <label for="pageSize" class="form-label mb-0">
+                        Expenses per page:
+                    </label>
+
+                    <select id="pageSize" class="form-select" style="width: auto;">
+                        <option value="5">5</option>
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                        <option value="25">25</option>
+                        <option value="30">30</option>
+                        <option value="40">40</option>
+                    </select>
+                </div>
                 <ul class="list-group" id="expenseList"></ul>
 
                 <!-- Pagination -->

@@ -4,11 +4,10 @@ const { Cashfree, CFEnvironment } = require("cashfree-pg");
 const Users = require("../models/Users");
 const Orders = require("../models/Orders");
 
-// Use SANDBOX while testing.
 const cashfree = new Cashfree(
   CFEnvironment.SANDBOX,
-  "TEST10473636d9e06a7a10d8f2ddf74163637401",
-  "cfsk_ma_test_3521dd7629a184fd837ae0778982ca6f_26ce7928"
+  "CLIENT_ID",
+  "CLIENT_SECRET_KEY"
 );
 
 const createOrder = async (req, res) => {

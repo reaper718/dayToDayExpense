@@ -6,6 +6,8 @@ const Expense = require('./models/Expenses');
 const Orders = require('./models/Orders');
 const forgotPassword = require('./models/ForgotPasswordRequests');
 const path = require('path');
+const fs = require('fs');
+const morgan = require('morgan');
 
 const userRouter = require('./routers/userRouter');
 const expenseRouter = require('./routers/expenseRouter');
@@ -16,10 +18,13 @@ const forgotPassedRouter = require('./routers/forgotPasswdRouter');
 
 const app = express();
 
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), {flags: 'a'});
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json())
 app.use(cors());
 app.use(express.static(path.join(__dirname,"../frontend")));
+app.use(morgan('combined', {stream: accessLogStream}));
 
 app.use('/users',userRouter);
 app.use('/expense',expenseRouter);

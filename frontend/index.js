@@ -118,11 +118,6 @@ document.addEventListener("DOMContentLoaded", initialize);
 function initialize() {
     const token = sessionStorage.getItem("token");
 
-    if (!token) {
-        window.location.href = "login.html";
-        return;
-    }
-
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
     const pageSizeSelect = document.getElementById("pageSize");
@@ -391,11 +386,6 @@ async function buyPremium() {
   try {
     setAuthToken();
 
-    if (!sessionStorage.getItem("token")) {
-      window.location.href = "login.html";
-      return;
-    }
-
     const response = await axios.post(
       `${API_URL}/payment/create-order`,
       {}
@@ -538,4 +528,162 @@ descriptionInput.addEventListener("input", () => {
             }
         }
     }, 700);
+});
+
+
+let reportTransactions = [];
+
+async function initializeExpenseReports() {
+    const reportSection = document.getElementById('expenseReportsSection');
+
+    if (!reportSection) return;
+
+    try {
+        const response = await axios.get(
+            `${API_URL}/premium/report`,
+            {
+                params: {
+                    period: document.getElementById('reportPeriod').value,
+                    date: document.getElementById('reportDate').value,
+                    type: document.getElementById('reportType').value
+                }
+            }
+        );
+
+        // Only reveal reports after the backend confirms premium access.
+        reportSection.classList.remove('d-none');
+
+        renderExpenseReport(response.data);
+
+    } catch (error) {
+        reportSection.classList.add('d-none');
+
+        if (error.response?.status !== 403) {
+            console.error(
+                'Unable to initialize reports:',
+                error.response?.data || error.message
+            );
+        }
+    }
+}
+
+function renderExpenseReport(report) {
+    document.getElementById('reportIncome').textContent =
+        `₹${Number(report.totalIncome).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
+
+    document.getElementById('reportExpenses').textContent =
+        `₹${Number(report.totalExpenses).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
+
+    document.getElementById('reportSavings').textContent =
+        `₹${Number(report.savings).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
+
+    reportTransactions = report.transactions;
+
+    const tbody = document.getElementById('reportTransactionsBody');
+    tbody.replaceChildren();
+
+    if (reportTransactions.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+
+        cell.colSpan = 5;
+        cell.className = 'text-center text-muted py-4';
+        cell.textContent = 'No transactions found for this period.';
+
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+    }
+
+    reportTransactions.forEach(transaction => {
+        const row = document.createElement('tr');
+
+        [
+            transaction.date,
+            transaction.description,
+            transaction.category,
+            transaction.type,
+            `₹${transaction.amount.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`
+        ].forEach((value, index) => {
+            const cell = document.createElement('td');
+            cell.textContent = value;
+
+            if (index === 4) {
+                cell.className = 'text-end';
+            }
+
+            row.appendChild(cell);
+        });
+
+        tbody.appendChild(row);
+    });
+}
+
+// Reload the report when filters change.
+['reportPeriod', 'reportDate', 'reportType'].forEach(id => {
+    document.getElementById(id)?.addEventListener(
+        'change',
+        initializeExpenseReports
+    );
+});
+
+// Download the currently displayed report.
+document.getElementById('downloadExpensesBtn')?.addEventListener(
+    'click',
+    () => {
+        const section = document.getElementById('expenseReportsSection');
+
+        if (!section || section.classList.contains('d-none')) return;
+
+        const rows = [
+            ['Date', 'Description', 'Category', 'Type', 'Amount'],
+            ...reportTransactions.map(t => [
+                t.date,
+                t.description,
+                t.category,
+                t.type,
+                t.amount
+            ])
+        ];
+
+        const csv = rows.map(row =>
+            row.map(value =>
+                `"${String(value ?? '').replace(/"/g, '""')}"`
+            ).join(',')
+        ).join('\r\n');
+
+        const blob = new Blob(['\uFEFF' + csv], {
+            type: 'text/csv;charset=utf-8;'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = 'expense-report.csv';
+        link.click();
+
+        URL.revokeObjectURL(url);
+    }
+);
+
+document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date();
+
+    document.getElementById('reportDate').value =
+        `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    initializeExpenseReports();
 });

@@ -1,13 +1,14 @@
 const crypto = require("crypto");
 const { Cashfree, CFEnvironment } = require("cashfree-pg");
+require('dotenv').config();
 
 const Users = require("../models/Users");
 const Orders = require("../models/Orders");
 
 const cashfree = new Cashfree(
   CFEnvironment.SANDBOX,
-  "TEST10473636d9e06a7a10d8f2ddf74163637401",
-  "cfsk_ma_test_3521dd7629a184fd837ae0778982ca6f_26ce7928"
+  process.env.CASHFREE_CLIENT_ID,
+  process.env.CASHFREE_sECRET_KEY
 );
 
 const createOrder = async (req, res) => {

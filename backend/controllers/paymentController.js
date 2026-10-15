@@ -81,10 +81,11 @@ const verifyPayment = async (req, res) => {
     const orderId = req.query.order_id;
 
     if (!orderId) {
-      return res.status(400).json({ message: "Order ID is required" });
+      return res.status(400).json({
+        message: "Order ID is required"
+      });
     }
 
-    // Only the owner of this local order can verify it.
     const order = await Orders.findOne({
       where: {
         orderId,
@@ -93,10 +94,11 @@ const verifyPayment = async (req, res) => {
     });
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res.status(404).json({
+        message: "Order not found"
+      });
     }
 
-    // Never downgrade a previously successful order.
     if (order.status === "SUCCESSFUL") {
       return res.json({
         status: "SUCCESSFUL",
@@ -104,16 +106,18 @@ const verifyPayment = async (req, res) => {
       });
     }
 
-    const cashfreeResponse = await axios.get(
-      `${cashfreeBaseURL}/orders/${encodeURIComponent(orderId)}/payments`,
-      { headers: cashfreeHeaders }
-    );
+    // Fetch order details using Cashfree SDK
+    const cashfreeResponse = await cashfree.PGFetchOrder(orderId);
+    const cashfreeOrder = cashfreeResponse.data;
 
-    const payments = cashfreeResponse.data;
-
-    // At least one successful payment attempt means the order is paid.
-    if (payments.some((payment) => payment.payment_status === "SUCCESS")) {
+    if (cashfreeOrder.order_status === "PAID") {
       const user = await Users.findByPk(req.user.id);
+
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found"
+        });
+      }
 
       await order.update({ status: "SUCCESSFUL" });
       await user.update({ isPremium: true });
@@ -124,37 +128,36 @@ const verifyPayment = async (req, res) => {
       });
     }
 
-    // If any attempt is still pending, do not mark the order failed yet.
-    if (payments.some((payment) => payment.payment_status === "PENDING")) {
+    // Do not mark an order failed while payment may still be processing.
+    if (
+      ["ACTIVE", "PENDING"].includes(cashfreeOrder.order_status)
+    ) {
       return res.json({
         status: "PENDING",
         message: "Payment is still being processed",
       });
     }
 
-    // No successful or pending attempts remain.
-    // If there are no attempts yet, keep the order pending.
-    if (payments.length === 0) {
+    if (cashfreeOrder.order_status === "EXPIRED") {
+      await order.update({ status: "FAILED" });
+
       return res.json({
-        status: "PENDING",
-        message: "Payment status is not available yet",
+        status: "FAILED",
+        message: "TRANSACTION FAILED",
       });
     }
 
-    await order.update({ status: "FAILED" });
-
     return res.json({
-      status: "FAILED",
-      message: "TRANSACTION FAILED",
+      status: "PENDING",
+      message: "Payment status is not available yet",
     });
+
   } catch (error) {
     console.error(
       "Payment verification failed:",
       error.response?.data || error.message
     );
 
-    // An API/network error is not proof of payment failure.
-    // Leave the order unchanged so it can be checked again.
     return res.status(500).json({
       message: "Unable to verify payment. Please try again.",
     });

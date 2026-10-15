@@ -1,0 +1,5 @@
+::1 - - [14/Oct/2026:16:14:21 +0000] "POST /users/login HTTP/1.1" 200 184 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+::1 - - [14/Oct/2026:16:14:22 +0000] "GET /expense/getExpense HTTP/1.1" 200 500 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+::1 - - [14/Oct/2026:16:14:22 +0000] "GET /premium/report?period=monthly&date=2026-10-14&type=all HTTP/1.1" 200 378 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+::1 - - [14/Oct/2026:17:16:43 +0000] "GET /expense/getExpense HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+::1 - - [14/Oct/2026:17:16:43 +0000] "GET /premium/report?period=monthly&date=2026-10-14&type=all HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"

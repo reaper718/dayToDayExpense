@@ -49,7 +49,7 @@ const createOrder = async (req, res) => {
         customer_phone: "9999999999",
       },
       order_meta: {
-         return_url: `http://localhost:3000/payment-status.html?order_id=${encodeURIComponent(orderId)}`
+         return_url: `${process.env.FRONTEND_URL}/payment-status.html?order_id=${encodeURIComponent(orderId)}`
       },
       order_note: "Expense Tracker Premium Membership",
     };

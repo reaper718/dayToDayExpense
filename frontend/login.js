@@ -43,9 +43,12 @@ const forgotPasswordLink = document.getElementById("forgotPasswordLink");
 const forgotPasswordForm = document.getElementById("forgotPasswordForm");
 const backToLogin = document.getElementById("backToLogin");
 const forgotMessage = document.getElementById("forgotMessage");
+const LoginForm = document.getElementById('loginForm');
 
 forgotPasswordLink.addEventListener("click", (event) => {
     event.preventDefault();
+
+    LoginForm.classList.add("d-none");
 
     forgotPasswordForm.classList.remove("d-none");
     forgotMessage.textContent = "";
@@ -55,6 +58,7 @@ forgotPasswordLink.addEventListener("click", (event) => {
 backToLogin.addEventListener("click", () => {
     forgotPasswordForm.classList.add("d-none");
     forgotMessage.textContent = "";
+    LoginForm.classList.remove("d-none");
 });
 
 forgotPasswordForm.addEventListener("submit", async (event) => {
